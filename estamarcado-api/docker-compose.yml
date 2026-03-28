@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres:${VERSAO_POSTRES:-17}
+    container_name: estamarcado-postgres
+    restart: always
+    environment:
+      # O Docker Compose lê automaticamente o arquivo .env no mesmo diretório
+      # Aqui mapeamos as variáveis internas do Postgres para o que está no seu .env
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-estamarcado_db}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
+    driver: local
