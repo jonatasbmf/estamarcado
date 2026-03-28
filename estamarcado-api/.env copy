@@ -1,0 +1,15 @@
+# Outras configurações
+PORT=40404
+
+# Versão usada na imagem do Docker
+VERSAO_POSTRES=17
+
+# Dados de acesso (usados pelo Docker e pelo Prisma)
+DB_USER=estamarcado_user
+DB_PASSWORD=estamarcado_pass
+DB_NAME=estamarcado_db
+DB_PORT=5435
+
+# URL de conexão que o Prisma utilizará
+# Note que usamos 'localhost' aqui porque o Nest roda fora do container (no seu host)
+DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@localhost:${DB_PORT}/${DB_NAME}?schema=public"
