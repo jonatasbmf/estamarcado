@@ -1,0 +1,82 @@
+# Dockerfile Otimizado Multistage - Backend API (NestJS)
+
+```dockerfile
+# -----------------------------------------------------------------------------
+# FASE 1: DEPENDÊNCIAS (Base image builder)
+# Objetivo: Baixar apenas o que compõe cache da árvore do npm e gerar schema
+# -----------------------------------------------------------------------------
+FROM node:20-alpine AS deps
+WORKDIR /app
+
+# Instale os pacotes básicos Alpine
+RUN apk add --no-cache libc6-compat openssl
+
+# Copie APENAS manifestos para evitar invalidar o cache completo
+COPY package.json package-lock.json ./
+COPY prisma ./prisma/
+
+# Bloqueie a árvore de hash (npm ci => Clean Install)
+RUN npm ci
+
+# Gere o binário do Prisma Client antes da build Nest
+RUN npx prisma generate
+
+
+# -----------------------------------------------------------------------------
+# FASE 2: BUILD
+# Objetivo: Converter o Typescript e remover pacotes inúteis "devDependencies"
+# -----------------------------------------------------------------------------
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Compila para TS => pasta "dist"
+RUN npm run build
+
+# Troca para Instalação enxuta para Imagem Final 
+RUN npm ci --omit=dev && npm cache clean --force
+
+# Regenera o Prisma garantindo binários exatos rodando o production mode
+RUN npx prisma generate
+
+
+# -----------------------------------------------------------------------------
+# FASE 3: RUNNER (Produção - Imagem Final)
+# Objetivo: Ambiente Ultra-limpo apenas executável
+# -----------------------------------------------------------------------------
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+# Aplique o node environment como Produção formal
+ENV NODE_ENV=production
+RUN apk add --no-cache openssl
+
+# Prática de Segurança: Crie usuário não-root (Mitigar escalonamento de privilégio se quebrado)
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nestuser -u 1001
+
+# Traga as dependências Prod
+COPY --from=builder /app/node_modules ./node_modules
+# Copie arquivos compilados
+COPY --from=builder /app/dist ./dist
+# Traga os Schemas p/ Migrations ou Referências
+COPY --from=builder /app/prisma ./prisma
+# O script de empacotamento
+COPY --from=builder /app/package.json ./package.json
+
+# Assinala hierarquia e trava root
+USER nestuser
+
+EXPOSE 3000
+
+# Porta padrão de health para Traefik ou Nginx load balancers
+ENV PORT=3000
+
+# O commando start, evitando nodemon e coisas inseguras
+CMD ["node", "dist/main.js"]
+```
+
+## Benefícios do Script
+- **Mitigação de CVE's (Vulnerabilidades):** Utiliza imagem Alpine leve com root explícito anulado localmente.
+- **Cache Múltiplo Compartilhado:** O Stage "deps" fica congelado se não houver um relançamento no repositório de novas dependências npm, poupando minutos valiosos na esteira de CI/CD GithubActions.

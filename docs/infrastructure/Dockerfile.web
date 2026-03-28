@@ -1,0 +1,75 @@
+# Dockerfile Otimizado Multistage - Frontend Web (Next.js)
+
+Esse Dockerfile tira proveito da configuração nativa do framework Next.js "Standalone Output". Certifique-se de ativar `output: 'standalone'` dentro do arquivo nativo `next.config.js` do seu projeto antes de rodá-lo (Caso a compilação aponte erro de pasta oculta ausente).
+
+```dockerfile
+# -----------------------------------------------------------------------------
+# FASE 1: DEPENDÊNCIAS
+# -----------------------------------------------------------------------------
+FROM node:20-alpine AS deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# -----------------------------------------------------------------------------
+# FASE 2: BUILDER (React Compiler)
+# -----------------------------------------------------------------------------
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Caso utilize ENV's no Frontend que precisem embutir na build, invoque-os. (Descomente em caso de API_URL)
+# ENV NEXT_PUBLIC_API_URL=http://api.suaempresa.com
+
+# Cria as pastas Standalone
+RUN npm run build
+
+# -----------------------------------------------------------------------------
+# FASE 3: RUNNER (Ambiente de Deploy Rígido)
+# -----------------------------------------------------------------------------
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+# Trave envio telemetria do Next.js pra Vercel (opcional mas recomendado se AWS)
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Configuração de Pasta Pública Transparente
+COPY --from=builder /app/public ./public
+
+# O Next.js cria magicamente os rastros no diretório Standalone sem importar todo o node_modules obeso
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3001
+ENV PORT=3001
+
+# Por padrão, ele ouve localhost se host não cravado. Garantir bind em container com server.js auto-gerado
+ENV HOSTNAME="0.0.0.0"
+
+# O Next Standalone output gera um mini server customizado
+CMD ["node", "server.js"]
+```
+
+## Como preparar esse Dockerfile
+No seu arquivo `next.config.js` adicione expressamente:
+
+```javascript
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  output: 'standalone', // ← ESSENCIAL AQUI PARA FUNCIONAR
+  // demais configs...
+};
+
+module.exports = nextConfig;
+```
+
+Isto permite que em vez da sua imagem pesar 1.5 Gigabytes pela montanha do "node_modules", ela perca essa gordura na FASE 3 caindo pra pouquíssimos MB (130-220MB dependendo) e suba sua resposta TTFB (Time to First Byte) no servidor em menos de milissegundos.

@@ -1,0 +1,522 @@
+# Arquitetura de Banco de Dados: Schema Prisma Completo
+
+Este documento detalha o schema unificado para o ERP SaaS multi-tenant. O modelo utiliza as melhores práticas para bancos transacionais: isolamento por tenant no mesmo banco de dados (`empresaId` como restrição fundamental), evitar o uso de `Enums` fixos no banco em favor de tabelas de domínio lookup (o que facilita a configuração por empresa sem necessidades de migrations constantes) e a adoção maciça do uso de UUIDs.
+
+```prisma
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------
+// 🏗️ 1. BASE MULTI-TENANT E IDENTIDADE VISUAL
+// ---------------------------------------------------------
+
+model Empresa {
+  id              String   @id @default(uuid())
+  empresaPaiId    String?  // Relacionamento hierárquico (Ex: Flavia Andrade LTDA -> Studio Beleza)
+  nomeFantasia    String
+  cnpj            String?
+  logoUrl         String?
+  corPrimaria     String?
+  corSecundaria   String?
+  dominio         String?  // Subdomínio para white-label
+  
+  ativo           Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+
+  empresaPai      Empresa?  @relation("HierarquiaEmpresa", fields: [empresaPaiId], references: [id])
+  empresasFilhas  Empresa[] @relation("HierarquiaEmpresa")
+
+  // Relacionamentos Fortes (Transacionais)
+  usuarios             Usuario[]
+  perfis               Perfil[]
+  pessoas              Pessoa[]
+  itens                Item[]
+  locaisEstoque        EstoqueLocal[]
+  movimentacoesEstoque MovimentacaoEstoque[]
+  fichasTecnicas       FichaTecnica[]
+  titulosFinanceiros   TituloFinanceiro[]
+  contasFinanceiras    ContaFinanceira[]
+  eventos              Evento[]
+  atendimentos         Atendimento[]
+  pedidos              Pedido[]
+  
+  // Relacionamento WhatsApp
+  configuracaoWhatsApp ConfiguracaoWhatsApp?
+  templatesWhatsApp    TemplateWhatsApp[]
+  enviosWhatsApp       EnvioWhatsApp[]
+  mensagensRecebidas   MensagemRecebidas[]
+}
+
+// ---------------------------------------------------------
+// 👤 2. USUÁRIOS, PERFIS E PERMISSÕES
+// ---------------------------------------------------------
+
+model Usuario {
+  id          String @id @default(uuid())
+  empresaId   String // Define a qual organização o usuário pertence logicamente
+  nome        String
+  email       String @unique
+  senhaHash   String
+  ativo       Boolean @default(true)
+  createdAt   DateTime @default(now())
+
+  empresa     Empresa @relation(fields: [empresaId], references: [id])
+  perfis      UsuarioPerfil[]
+}
+
+model Perfil {
+  id        String @id @default(uuid())
+  empresaId String
+  nome      String // Admin, Operador, Financeiro, Profissional
+
+  empresa    Empresa @relation(fields: [empresaId], references: [id])
+  usuarios   UsuarioPerfil[]
+  permissoes PerfilPermissao[]
+}
+
+model Permissao {
+  id        String @id @default(uuid())
+  codigo    String @unique // ex: FINANCEIRO_LER, ESTOQUE_CRIAR
+  descricao String
+
+  perfis    PerfilPermissao[]
+}
+
+model UsuarioPerfil {
+  usuarioId String
+  perfilId  String
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  perfil  Perfil  @relation(fields: [perfilId], references: [id], onDelete: Cascade)
+
+  @@id([usuarioId, perfilId])
+}
+
+model PerfilPermissao {
+  perfilId    String
+  permissaoId String
+
+  perfil     Perfil     @relation(fields: [perfilId], references: [id], onDelete: Cascade)
+  permissao  Permissao  @relation(fields: [permissaoId], references: [id], onDelete: Cascade)
+
+  @@id([perfilId, permissaoId])
+}
+
+// ---------------------------------------------------------
+// 👥 3. PESSOAS (MODELO FLEXÍVEL E POLIMÓRFICO)
+// ---------------------------------------------------------
+
+model TipoPessoa {
+  id     String @id @default(uuid())
+  codigo String @unique // CLIENTE, FORNECEDOR, PROFISSIONAL
+  nome   String
+  
+  pessoas PessoaPapel[]
+}
+
+model Pessoa {
+  id              String @id @default(uuid())
+  empresaId       String
+  nome            String
+  telefone        String?
+  email           String?
+  documento       String? // CPF/CNPJ
+  dataNascimento  DateTime?
+  observacoes     String?
+  
+  // Extensões para profissionais
+  comissaoPadrao  Float?
+  tipoComissao    String? // FIXO, PERCENTUAL, HIBRIDO
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+
+  empresa         Empresa @relation(fields: [empresaId], references: [id])
+  papeis          PessoaPapel[]
+
+  // Referências reversas
+  eventosCliente       Evento[] @relation("EventoCliente")
+  eventosProfissional  Evento[] @relation("EventoProfissional")
+  atendimentos         Atendimento[]
+  atendimentosRateio   AtendimentoItem[]
+  pedidos              Pedido[]
+}
+
+model PessoaPapel {
+  pessoaId String
+  tipoId   String
+
+  pessoa Pessoa     @relation(fields: [pessoaId], references: [id], onDelete: Cascade)
+  tipo   TipoPessoa @relation(fields: [tipoId], references: [id], onDelete: Cascade)
+
+  @@id([pessoaId, tipoId])
+}
+
+// ---------------------------------------------------------
+// 📦 4. MÓDULO DE ESTOQUE E FICHA TÉCNICA (CORE)
+// ---------------------------------------------------------
+
+model TipoItem {
+  id     String @id @default(uuid())
+  codigo String @unique // MATERIA_PRIMA, PRODUTO, CONSUMO, SERVICO
+  nome   String
+
+  itens Item[]
+}
+
+model Item {
+  id              String @id @default(uuid())
+  empresaId       String
+  tipoId          String
+  nome            String
+  
+  unidadeCompra   String // Caixa, Kg, Litro
+  unidadeConsumo  String // Unidade, Grama, ML
+  fatorConversao  Float  // Quantas unidades de consumo existem na unidade de compra
+
+  estoqueMinimo   Float?
+  precoVenda      Float? // Valor sugerido
+  custoMedioAtual Float  @default(0) // CMP (Custo Médio Ponderado)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  empresa         Empresa @relation(fields: [empresaId], references: [id])
+  tipo            TipoItem @relation(fields: [tipoId], references: [id])
+
+  movimentacoes   MovimentacaoEstoque[]
+  fichasTenicas   FichaTecnica[] @relation("ItemFinal")
+  itensComposicao FichaTecnicaItem[]
+}
+
+model EstoqueLocal {
+  id        String @id @default(uuid())
+  empresaId String
+  nome      String // Almoxarifado, Estoque Vitrine, Cabine 1
+
+  empresa Empresa @relation(fields: [empresaId], references: [id])
+  movimentacoes MovimentacaoEstoque[]
+}
+
+model TipoMovimentacao {
+  id     String @id @default(uuid())
+  codigo String @unique // ENTRADA_COMPRA, SAIDA_VENDA, CONSUMO_INTERNO, AJUSTE, TRANSFERENCIA
+  nome   String
+  sinal  Int // 1 para entrada, -1 para saída
+
+  movimentacoes MovimentacaoEstoque[]
+}
+
+// O estoque é tratado como um Event Ledger (Livro Razão)
+model MovimentacaoEstoque {
+  id           String @id @default(uuid())
+  empresaId    String
+  itemId       String
+  localId      String
+  tipoId       String
+
+  quantidade   Float // Sempre positivo, o sinal do tipo dita a operação
+  custoUnitario Float? // Custo no momento da movimentação
+  
+  documentoTipo String? // NF, PEDIDO, ATENDIMENTO, AJUSTE_MANUAL
+  documentoId   String? // ID do documento base
+
+  observacao   String?
+  createdAt    DateTime @default(now())
+
+  empresa Empresa @relation(fields: [empresaId], references: [id])
+  item    Item    @relation(fields: [itemId], references: [id])
+  local   EstoqueLocal @relation(fields: [localId], references: [id])
+  tipo    TipoMovimentacao @relation(fields: [tipoId], references: [id])
+
+  @@index([empresaId, itemId])
+}
+
+// Bill of Materials (BOM) - O que precisa para produzir/servir um Item
+model FichaTecnica {
+  id        String @id @default(uuid())
+  empresaId String
+  itemId    String
+
+  empresa Empresa @relation(fields: [empresaId], references: [id])
+  item    Item    @relation("ItemFinal", fields: [itemId], references: [id])
+  
+  itens FichaTecnicaItem[]
+}
+
+model FichaTecnicaItem {
+  id         String @id @default(uuid())
+  fichaId    String
+  itemId     String
+  quantidade Float  // Quantidade de "unidadeConsumo" que irá gastar
+
+  ficha FichaTecnica @relation(fields: [fichaId], references: [id], onDelete: Cascade)
+  item  Item         @relation(fields: [itemId], references: [id])
+}
+
+// ---------------------------------------------------------
+// 💸 5. MÓDULO FINANCEIRO
+// ---------------------------------------------------------
+
+model TipoTitulo {
+  id     String @id @default(uuid())
+  codigo String @unique // RECEBER, PAGAR
+  nome   String
+  
+  titulos TituloFinanceiro[]
+}
+
+model StatusFinanceiro {
+  id     String @id @default(uuid())
+  codigo String @unique // PENDENTE, PAGO, CANCELADO, VENCIDO, PARCIAL
+  nome   String
+  
+  titulos TituloFinanceiro[]
+}
+
+model ContaFinanceira {
+  id          String @id @default(uuid())
+  empresaId   String
+  nome        String // Banco X, Caixa Física, Cofre
+  tipo        String // BANCO, CAIXA, CARTAO_CREDITO
+  saldoAtual  Float @default(0)
+
+  empresa Empresa @relation(fields: [empresaId], references: [id])
+}
+
+model TituloFinanceiro {
+  id            String @id @default(uuid())
+  empresaId     String
+  
+  tipoId        String
+  statusId      String
+
+  descricao     String
+  valorOriginal Float
+  valorLiquido  Float? // Após taxas
+  valorPago     Float  @default(0) // Valor já amortizado
+  
+  dataEmissao   DateTime @default(now())
+  dataVencimento DateTime
+  dataPagamento DateTime?
+
+  origemTipo    String? // VENDA, COMPRA, RATEIO_PROFISSIONAL
+  origemId      String? // ID do pedido ou atendimento envolvido
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  empresa Empresa @relation(fields: [empresaId], references: [id])
+  tipo    TipoTitulo @relation(fields: [tipoId], references: [id])
+  status  StatusFinanceiro @relation(fields: [statusId], references: [id])
+}
+
+// ---------------------------------------------------------
+// 📅 6. AGENDA E CRM (STUDIO)
+// ---------------------------------------------------------
+
+model StatusAgenda {
+  id     String @id @default(uuid())
+  codigo String @unique // AGUARDANDO, CONFIRMADO, EM_CURSO, FINALIZADO, NO_SHOW, CANCELADO
+  nome   String
+  
+  eventos Evento[]
+}
+
+model Evento {
+  id              String @id @default(uuid())
+  empresaId       String
+  clienteId       String
+  profissionalId  String?
+  servicoId       String? // Item do tipo SERVICO
+
+  statusId        String
+
+  dataInicio      DateTime
+  dataFim         DateTime
+  
+  observacoes     String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  empresa      Empresa @relation(fields: [empresaId], references: [id])
+  cliente      Pessoa  @relation("EventoCliente", fields: [clienteId], references: [id])
+  profissional Pessoa? @relation("EventoProfissional", fields: [profissionalId], references: [id])
+  status       StatusAgenda @relation(fields: [statusId], references: [id])
+}
+
+// ---------------------------------------------------------
+// 🧾 7. ATENDIMENTO E RATEIO (STUDIO)
+// ---------------------------------------------------------
+
+model StatusAtendimento {
+  id     String @id @default(uuid())
+  codigo String @unique // ABERTO, FINALIZADO, CANCELADO
+  nome   String
+  
+  atendimentos Atendimento[]
+}
+
+model Atendimento {
+  id         String @id @default(uuid())
+  empresaId  String
+  clienteId  String
+  statusId   String
+  
+  valorTotal Float  @default(0)
+  desconto   Float  @default(0)
+  valorFinal Float  @default(0)
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  empresa Empresa @relation(fields: [empresaId], references: [id])
+  cliente Pessoa  @relation(fields: [clienteId], references: [id])
+  status  StatusAtendimento @relation(fields: [statusId], references: [id])
+  
+  itens AtendimentoItem[]
+}
+
+// Representa cada serviço prestado dentro de um Atendimento para fins de comissão/rateio
+model AtendimentoItem {
+  id              String @id @default(uuid())
+  atendimentoId   String
+  profissionalId  String
+  servicoId       String // Item referenciado
+
+  valorBase       Float // Preço do serviço para o cliente
+  comissao        Float // Comissão do profissional (Gerará Título A Pagar)
+  custoConsumo    Float? // Custo abatido (BOM)
+
+  atendimento    Atendimento @relation(fields: [atendimentoId], references: [id], onDelete: Cascade)
+  profissional   Pessoa      @relation(fields: [profissionalId], references: [id])
+}
+
+// ---------------------------------------------------------
+// 🍿 8. PEDIDOS E LOGÍSTICA (PIPOCA GOURMET)
+// ---------------------------------------------------------
+
+model StatusPedido {
+  id     String @id @default(uuid())
+  codigo String @unique // RASCUNHO, CONFIRMADO, PRODUCAO, PRONTO, ROTA, ENTREGUE, CANCELADO
+  nome   String
+  
+  pedidos Pedido[]
+}
+
+model Pedido {
+  id           String @id @default(uuid())
+  empresaId    String
+  clienteId    String
+  statusId     String
+
+  dataEntrega  DateTime?
+  valorTotal   Float @default(0)
+  frete        Float @default(0)
+  
+  cep          String?
+  endereco     String?
+  numero       String?
+  bairro       String?
+  cidade       String?
+  uf           String?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  empresa Empresa @relation(fields: [empresaId], references: [id])
+  cliente Pessoa  @relation(fields: [clienteId], references: [id])
+  status  StatusPedido @relation(fields: [statusId], references: [id])
+}
+
+// ---------------------------------------------------------
+// 💬 9. INTEGRAÇÃO WHATSAPP CLOUD API
+// ---------------------------------------------------------
+
+model ConfiguracaoWhatsApp {
+  id                String   @id @default(uuid())
+  empresaId         String   @unique
+  phoneNumberId     String   // Identificador do Número disparador (Meta API)
+  businessAccountId String?  // Meta Business ID
+  accessToken       String   // Token permanente do System User
+  webhookSecret     String?  // Segredo usado no processo do webhook
+  ativo             Boolean  @default(true)
+
+  empresa Empresa @relation(fields: [empresaId], references: [id])
+}
+
+model TemplateWhatsApp {
+  id          String   @id @default(uuid())
+  empresaId   String
+  nome        String   // Ex: confirmacao_agendamento
+  templateId  String   // Ex: agendamento_confirmado_v1 (id do meta)
+  categoria   String   // UTILITY, MARKETING, AUTHENTICATION
+  idioma      String   @default("pt_BR")
+  conteudo    String   // Copy textual do template
+  aprovado    Boolean  @default(false)
+  variaveis   String[] // Array das variáreis exigidas, ex: ["[1:nome]", "[2:data]"]
+
+  empresa     Empresa @relation(fields: [empresaId], references: [id])
+  envios      EnvioWhatsApp[]
+
+  @@unique([empresaId, nome])
+}
+
+model EnvioWhatsApp {
+  id              String   @id @default(uuid())
+  empresaId       String
+  templateId      String?
+  
+  destinatario    String   // Número do cliente formato internacional (E.g. 5511999999999)
+  variaveis       Json?    // Objeto JSON com as variáveis populadas
+  status          String   // ENVIADO, DELIVERED, READ, FAILED
+  mensagemId      String?  // WhatsApp Message ID (WA_ID) retornado pela Meta
+  
+  contextoId      String?  // Relacionamento soft com Evento, Pedido...
+  contextoTipo    String?  // "EVENTO", "ATENDIMENTO", "PEDIDO"
+
+  createdAt       DateTime @default(now())
+
+  empresa  Empresa           @relation(fields: [empresaId], references: [id])
+  template TemplateWhatsApp? @relation(fields: [templateId], references: [id])
+}
+
+model MensagemRecebidas {
+  id              String   @id @default(uuid())
+  empresaId       String
+  from            String   // Quem chamou, Ex: 5511999999999
+  mensagem        String?  // Conteudo do Body (Texto)
+  tipo            String   // "text", "image", "button_reply", "interactive"
+  mensagemId      String   // ID retornado pela Meta
+  contextoId      String?  // Caso seja resposta vinculável a entidade lógica
+  contextoTipo    String?
+  status          String   @default("RECEBIDA")
+  payload         Json     // Todo o payload bruto retornado pelo Hook
+
+  createdAt       DateTime @default(now())
+
+  empresa Empresa @relation(fields: [empresaId], references: [id])
+
+  @@index([empresaId, from])
+}
+```
+
+## Como aplicar esse Schema
+
+1. Salve este conteúdo num arquivo `schema.prisma`.
+2. Configure sua env (`.env`) contendo a string de sua base PostgreSQL 17: `DATABASE_URL="postgresql://user:password@localhost:5432/erp_db?schema=public"`
+3. Navegue até a pasta do arquivo e execute: `npx prisma db push` para mapeamentos em modo de desenvolvimento ou utilize `npx prisma migrate dev --name init_multi_tenant` para rastreamento oficial.
+4. Rode `npx prisma generate` para compilar o Prisma Client TypeScript.

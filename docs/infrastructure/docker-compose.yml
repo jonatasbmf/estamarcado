@@ -1,0 +1,97 @@
+# Orquestração do Ecossistema - Docker Compose
+
+Esse recurso subirá para ambiente de **Desenvolvimento e Teste Local**, o Banco Postgres Version 17, a camada estática Web Frontend (App da Venda e CRM) e o motor API Nest.js.
+
+```yaml
+version: '3.8'
+
+services:
+  # -----------------------------------------------
+  # BANCO DE DADOS: POSTGRESQL MULTI-TENANT (v17)
+  # -----------------------------------------------
+  postgres_db:
+    image: postgres:17-alpine
+    container_name: erp_database_v17
+    restart: always # Recupera o banco caso o Docker desktop desligue abruptamente
+    environment:
+      POSTGRES_USER: erp_admin
+      POSTGRES_PASSWORD: supersecretpassword123
+      POSTGRES_DB: erp_tenant_db
+      TZ: America/Sao_Paulo # Mantendo fuso para evitar erros na Agenda e Financeiro Vencimentos
+    ports:
+      - "5432:5432" # Expõe local p/ acessar via PGAdmin / DBeaver 
+    volumes:
+      - pgdata_erp:/var/lib/postgresql/data # Persistência
+    networks:
+      - erp_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U erp_admin -d erp_tenant_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # -----------------------------------------------
+  # BACKEND DA API NESTJS
+  # -----------------------------------------------
+  api_backend:
+    build: 
+      context: ../../  # Assume que root da build é na principal
+      dockerfile: ./docs/infrastructure/Dockerfile.api
+    container_name: erp_api_nestjs
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Passa as strings blindando hardcode do container
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://erp_admin:supersecretpassword123@postgres_db:5432/erp_tenant_db?schema=public
+      - JWT_SECRET=chave-super-secreta-jwt-nao-utilizar-prod
+      - WHATSAPP_API_VERSION=v20.0
+      - WHATSAPP_VERIFY_TOKEN=token-webhook-local-teste-hook
+    depends_on:
+      postgres_db:
+        condition: service_healthy # Aguarda o PostgreSQL 17 notificar boot sadio
+    networks:
+      - erp_network
+
+  # -----------------------------------------------
+  # FRONT-END NEXTJS WEB (PAINEL CLIENTE / CRM)
+  # -----------------------------------------------
+  web_frontend:
+    build:
+      context: ../../ # Root
+      dockerfile: ./docs/infrastructure/Dockerfile.web
+    container_name: erp_web_nextjs
+    restart: unless-stopped
+    ports:
+      - "3001:3001" # Host Mapped
+    environment:
+      - NODE_ENV=production
+      # Chamando a rede docker interna de Bridge
+      - NEXT_PUBLIC_API_URL=http://localhost:3000 
+    depends_on:
+      - api_backend
+    networks:
+      - erp_network
+
+# Redes Fechadas para as Imagens comunicarem internamente
+networks:
+  erp_network:
+    driver: bridge
+
+# Mount Local Padrão Docker Windows/WSL2  
+volumes:
+  pgdata_erp:
+    name: erp_postgres_17_data
+```
+
+## Instruções para Ligação Direta
+
+Se quiser subir instantaneamente a pilha em sua máquina de trabalho:
+
+1. Deva estar na pasta principal `/docs/infrastructure/` pelo CMD e executar: `docker-compose up -d --build`
+2. Aguarde entre 3 e 4 minutos a montagem.
+3. Acesse `http://localhost:3001` no navegador.
+
+> [!WARNING]
+> No NestJS em produção e migrações do Prisma, você deve criar um script autômato em seu repositório de back com `npx prisma migrate deploy` antes ou acoplado ao `npm start`, preenchendo as tabelas que você fez no Schema. (Um script de seed também costuma ser associado aqui).
