@@ -7,6 +7,7 @@ import { GetMovimentacaoEstoqueByIdUseCase } from './application/useCase/get-mov
 import { UpdateMovimentacaoEstoqueUseCase } from './application/useCase/update-movimentacao-estoque.usecase';
 import { DeleteMovimentacaoEstoqueUseCase } from './application/useCase/delete-movimentacao-estoque.usecase';
 import { DatabaseModule } from 'src/core/database/database.module';
+import { PrismaService } from 'src/core/database/prisma/prisma.service';
 
 @Module({
   imports: [DatabaseModule],
@@ -18,6 +19,7 @@ import { DatabaseModule } from 'src/core/database/database.module';
     GetMovimentacaoEstoqueByIdUseCase,
     UpdateMovimentacaoEstoqueUseCase,
     DeleteMovimentacaoEstoqueUseCase,
+    PrismaService,
   ],
   exports: [MovimentacaoEstoqueService],
 })

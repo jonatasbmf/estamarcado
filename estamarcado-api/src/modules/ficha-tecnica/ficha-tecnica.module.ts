@@ -7,6 +7,7 @@ import { GetFichaTecnicaByIdUseCase } from './application/useCase/get-ficha-tecn
 import { UpdateFichaTecnicaUseCase } from './application/useCase/update-ficha-tecnica.usecase';
 import { DeleteFichaTecnicaUseCase } from './application/useCase/delete-ficha-tecnica.usecase';
 import { DatabaseModule } from 'src/core/database/database.module';
+import { PrismaService } from 'src/core/database/prisma/prisma.service';
 
 @Module({
   imports: [DatabaseModule],
@@ -18,6 +19,7 @@ import { DatabaseModule } from 'src/core/database/database.module';
     GetFichaTecnicaByIdUseCase,
     UpdateFichaTecnicaUseCase,
     DeleteFichaTecnicaUseCase,
+    PrismaService,
   ],
   exports: [FichaTecnicaService],
 })

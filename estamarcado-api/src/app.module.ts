@@ -19,6 +19,8 @@ import { MovimentacaoEstoqueModule } from './modules/movimentacao-estoque/movime
     UserModule,
     ItemModule,
     PerfilModule,
+    FichaTecnicaModule,
+    MovimentacaoEstoqueModule,
   ],
   controllers: [],
   providers: [PrismaService],

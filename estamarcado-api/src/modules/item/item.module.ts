@@ -18,6 +18,7 @@ import { ItemRepository } from './repository/item.repository';
     GetItemByIdUseCase,
     UpdateItemUseCase,
     DeleteItemUseCase,
+    PrismaService,
   ],
 })
 export class ItemModule {}
