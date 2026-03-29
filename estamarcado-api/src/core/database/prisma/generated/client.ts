@@ -29,8 +29,8 @@ export * from "./enums.js"
  * const prisma = new PrismaClient({
  *   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
  * })
- * // Fetch zero or more Users
- * const users = await prisma.user.findMany()
+ * // Fetch zero or more Empresas
+ * const empresas = await prisma.empresa.findMany()
  * ```
  * 
  * Read more in our [docs](https://pris.ly/d/client).
@@ -40,12 +40,157 @@ export type PrismaClient<LogOpts extends Prisma.LogLevel = never, OmitOpts exten
 export { Prisma }
 
 /**
- * Model User
+ * Model Empresa
  * 
  */
-export type User = Prisma.UserModel
+export type Empresa = Prisma.EmpresaModel
 /**
- * Model Post
+ * Model Usuario
  * 
  */
-export type Post = Prisma.PostModel
+export type Usuario = Prisma.UsuarioModel
+/**
+ * Model Perfil
+ * 
+ */
+export type Perfil = Prisma.PerfilModel
+/**
+ * Model Permissao
+ * 
+ */
+export type Permissao = Prisma.PermissaoModel
+/**
+ * Model UsuarioPerfil
+ * 
+ */
+export type UsuarioPerfil = Prisma.UsuarioPerfilModel
+/**
+ * Model PerfilPermissao
+ * 
+ */
+export type PerfilPermissao = Prisma.PerfilPermissaoModel
+/**
+ * Model TipoPessoa
+ * 
+ */
+export type TipoPessoa = Prisma.TipoPessoaModel
+/**
+ * Model Pessoa
+ * 
+ */
+export type Pessoa = Prisma.PessoaModel
+/**
+ * Model PessoaPapel
+ * 
+ */
+export type PessoaPapel = Prisma.PessoaPapelModel
+/**
+ * Model TipoItem
+ * 
+ */
+export type TipoItem = Prisma.TipoItemModel
+/**
+ * Model Item
+ * 
+ */
+export type Item = Prisma.ItemModel
+/**
+ * Model EstoqueLocal
+ * 
+ */
+export type EstoqueLocal = Prisma.EstoqueLocalModel
+/**
+ * Model TipoMovimentacao
+ * 
+ */
+export type TipoMovimentacao = Prisma.TipoMovimentacaoModel
+/**
+ * Model MovimentacaoEstoque
+ * 
+ */
+export type MovimentacaoEstoque = Prisma.MovimentacaoEstoqueModel
+/**
+ * Model FichaTecnica
+ * 
+ */
+export type FichaTecnica = Prisma.FichaTecnicaModel
+/**
+ * Model FichaTecnicaItem
+ * 
+ */
+export type FichaTecnicaItem = Prisma.FichaTecnicaItemModel
+/**
+ * Model TipoTitulo
+ * 
+ */
+export type TipoTitulo = Prisma.TipoTituloModel
+/**
+ * Model StatusFinanceiro
+ * 
+ */
+export type StatusFinanceiro = Prisma.StatusFinanceiroModel
+/**
+ * Model ContaFinanceira
+ * 
+ */
+export type ContaFinanceira = Prisma.ContaFinanceiraModel
+/**
+ * Model TituloFinanceiro
+ * 
+ */
+export type TituloFinanceiro = Prisma.TituloFinanceiroModel
+/**
+ * Model StatusAgenda
+ * 
+ */
+export type StatusAgenda = Prisma.StatusAgendaModel
+/**
+ * Model Evento
+ * 
+ */
+export type Evento = Prisma.EventoModel
+/**
+ * Model StatusAtendimento
+ * 
+ */
+export type StatusAtendimento = Prisma.StatusAtendimentoModel
+/**
+ * Model Atendimento
+ * 
+ */
+export type Atendimento = Prisma.AtendimentoModel
+/**
+ * Model AtendimentoItem
+ * 
+ */
+export type AtendimentoItem = Prisma.AtendimentoItemModel
+/**
+ * Model StatusPedido
+ * 
+ */
+export type StatusPedido = Prisma.StatusPedidoModel
+/**
+ * Model Pedido
+ * 
+ */
+export type Pedido = Prisma.PedidoModel
+/**
+ * Model ConfiguracaoWhatsApp
+ * 
+ */
+export type ConfiguracaoWhatsApp = Prisma.ConfiguracaoWhatsAppModel
+/**
+ * Model TemplateWhatsApp
+ * 
+ */
+export type TemplateWhatsApp = Prisma.TemplateWhatsAppModel
+/**
+ * Model EnvioWhatsApp
+ * 
+ */
+export type EnvioWhatsApp = Prisma.EnvioWhatsAppModel
+/**
+ * Model MensagemRecebidas
+ * 
+ */
+export type MensagemRecebidas = Prisma.MensagemRecebidasModel
