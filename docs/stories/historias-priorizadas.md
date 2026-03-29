@@ -49,10 +49,35 @@ Segregamos os requisitos utilizando a prioritização **MoSCoW**:
 1. Aceitar adição N:N com Item final.
 2. Validar recursão circular (Impedir que A precise de B, e B precise de A).
 
+**Status:** ✅ IMPLEMENTADO - Módulo `ficha-tecnica` criado com:
+- DTOs: Create, Update, Response
+- Repository com operações CRUD
+- UseCases: Create, GetById, Update, Delete
+- Service orquestrando operações
+- Controller com rotas: POST /create, GET /:id, PATCH /:id, DELETE /:id, GET /
+- Validações de existência de Item
+- Suporte a relações N:N via FichaTecnicaItem
+
+**Próximas Tarefas:**
+- [ ] Validação de recursão circular
+- [ ] Integração com atendimentos para deduções automáticas
+
+---
+
 ### [M] US05: Fechamento via PMP (Preço Médio)
 **Como** Gestor Financeiro  
 **Eu quero** que qualquer entrada de "Compra" atualize automaticamente meu Custo PMP  
 **Para que** minha precificação nunca defase durante os meses inflacionários do varejo.
+
+**Status:** ✅ IMPLEMENTADO - Módulo `movimentacao-estoque` criado com:
+- DTOs: Create, Update, Response
+- Repository com `calculateCMP()` para cálculo do Custo Médio Ponderado
+- UseCases: Create (com atualização automática de CMP), GetById, Update, Delete
+- Service orquestrando operações
+- Controller com rotas: POST /create, GET /:id, PATCH /:id, DELETE /:id, GET /, GET /item/:itemId
+- Validações: Item, Local de Estoque, Tipo de Movimentação, Quantidade
+- **Lógica PMP:** Em cada entrada de compra, recalcula `custoMedioAtual` do Item automaticamente
+- Suporte a diferentes tipos de movimentação (ENTRADA_COMPRA, SAIDA_VENDA, CONSUMO_INTERNO, AJUSTE, TRANSFERENCIA)
 
 ---
 

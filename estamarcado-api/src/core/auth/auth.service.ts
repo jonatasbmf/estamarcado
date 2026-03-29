@@ -16,10 +16,14 @@ export class AuthService {
       where: { email },
       include: { empresa: true },
     });
+
     if (user && (await bcrypt.compare(password, user.senhaHash))) {
       const { senhaHash: _senhaHash, ...result } = user;
+
+      console.log('User found:', result); // Log the user object without the password hash
       return result;
     }
+
     return null;
   }
 
