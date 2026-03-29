@@ -1,6 +1,9 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from 'src/core/database/prisma/prisma.service';
 import { MovimentacaoEstoqueRepository } from '../../repository/movimentacao-estoque.repository';
+import { MovimentacaoEstoqueMapper } from '../../mappers/movimentacao-estoque.mapper';
+import { BaseResult } from 'src/common/base-result';
+import { MovimentacaoEstoqueResponseDto } from '../../dto/movimentacao-estoque-response.dto';
 
 @Injectable()
 export class CreateMovimentacaoEstoqueUseCase {
@@ -9,7 +12,7 @@ export class CreateMovimentacaoEstoqueUseCase {
     private readonly repository: MovimentacaoEstoqueRepository,
   ) {}
 
-  async execute(data: any): Promise<any> {
+  async execute(data: any): Promise<BaseResult<MovimentacaoEstoqueResponseDto>> {
     const {
       empresaId,
       itemId,
@@ -87,6 +90,8 @@ export class CreateMovimentacaoEstoqueUseCase {
       });
     }
 
-    return movimentacao;
+    return new BaseResult<MovimentacaoEstoqueResponseDto>().ok(
+      MovimentacaoEstoqueMapper.toResponse(movimentacao),
+    );
   }
 }

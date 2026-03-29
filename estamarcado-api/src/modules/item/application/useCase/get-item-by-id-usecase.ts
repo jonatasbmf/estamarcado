@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { BaseResult } from 'src/common/base-result';
 import { PrismaService } from 'src/core/database/prisma/prisma.service';
 import { ItemResponseDto } from '../../dto/item-response.dto';
+import { ItemMapper } from '../../mappers/item.mapper';
 
 @Injectable()
 export class GetItemByIdUseCase {
@@ -16,19 +17,8 @@ export class GetItemByIdUseCase {
       return new BaseResult<ItemResponseDto>().error('Item not found');
     }
 
-    return new BaseResult<ItemResponseDto>().ok({
-      id: item.id,
-      empresaId: item.empresaId,
-      tipoId: item.tipoId,
-      nome: item.nome,
-      unidadeCompra: item.unidadeCompra,
-      unidadeConsumo: item.unidadeConsumo,
-      fatorConversao: item.fatorConversao,
-      estoqueMinimo: item.estoqueMinimo,
-      precoVenda: item.precoVenda,
-      custoMedioAtual: item.custoMedioAtual,
-      createdAt: item.createdAt,
-      updatedAt: item.updatedAt,
-    });
+    return new BaseResult<ItemResponseDto>().ok(
+      ItemMapper.toResponse(item),
+    );
   }
 }

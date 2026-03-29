@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { BaseResult } from 'src/common/base-result';
 import { PrismaService } from 'src/core/database/prisma/prisma.service';
 import { PerfilResponseDto } from '../../dto/perfil-response.dto';
+import { PerfilMapper } from '../../mappers/perfil.mapper';
 
 @Injectable()
 export class GetPerfilByIdUseCase {
@@ -16,10 +17,8 @@ export class GetPerfilByIdUseCase {
       return new BaseResult<PerfilResponseDto>().error('Perfil not found');
     }
 
-    return new BaseResult<PerfilResponseDto>().ok({
-      id: perfil.id,
-      empresaId: perfil.empresaId,
-      nome: perfil.nome,
-    });
+    return new BaseResult<PerfilResponseDto>().ok(
+      PerfilMapper.toResponse(perfil),
+    );
   }
 }

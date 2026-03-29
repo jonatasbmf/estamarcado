@@ -3,6 +3,7 @@ import { BaseResult } from 'src/common/base-result';
 import { PrismaService } from 'src/core/database/prisma/prisma.service';
 import { PerfilUpdateDto } from '../../dto/perfil-update.dto';
 import { PerfilResponseDto } from '../../dto/perfil-response.dto';
+import { PerfilMapper } from '../../mappers/perfil.mapper';
 
 @Injectable()
 export class UpdatePerfilUseCase {
@@ -22,16 +23,11 @@ export class UpdatePerfilUseCase {
 
     const updatedPerfil = await this.prismaService.perfil.update({
       where: { id },
-      data: {
-        empresaId: perfilUpdateDto.empresaId,
-        nome: perfilUpdateDto.nome,
-      },
+      data: PerfilMapper.toPersistence(perfilUpdateDto),
     });
 
-    return new BaseResult<PerfilResponseDto>().ok({
-      id: updatedPerfil.id,
-      empresaId: updatedPerfil.empresaId,
-      nome: updatedPerfil.nome,
-    });
+    return new BaseResult<PerfilResponseDto>().ok(
+      PerfilMapper.toResponse(updatedPerfil),
+    );
   }
 }
