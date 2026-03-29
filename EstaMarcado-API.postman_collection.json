@@ -1,0 +1,736 @@
+{
+  "info": {
+    "name": "EstaMarcado API",
+    "description": "Coleção completa de endpoints da API EstaMarcado com exemplos de uso",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"usuario@example.com\",\n  \"password\": \"senha123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Autentica um usuário e retorna um token JWT"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Criar Usuário",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "disabled": false
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"João Silva\",\n  \"email\": \"joao@example.com\",\n  \"senha\": \"senha123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/user/create",
+              "host": ["{{base_url}}"],
+              "path": ["user", "create"]
+            },
+            "description": "Cria um novo usuário"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Usuários",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["user"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Lista todos os usuários com paginação"
+          },
+          "response": []
+        },
+        {
+          "name": "Obter Usuário por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/123e4567-e89b-12d3-a456-426614174000",
+              "host": ["{{base_url}}"],
+              "path": ["user", "123e4567-e89b-12d3-a456-426614174000"]
+            },
+            "description": "Obtém um usuário específico pelo ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar Usuário",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"João Silva Updated\",\n  \"email\": \"joao.updated@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/user/123e4567-e89b-12d3-a456-426614174000",
+              "host": ["{{base_url}}"],
+              "path": ["user", "123e4567-e89b-12d3-a456-426614174000"]
+            },
+            "description": "Atualiza os dados de um usuário existente"
+          },
+          "response": []
+        },
+        {
+          "name": "Deletar Usuário",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/123e4567-e89b-12d3-a456-426614174000",
+              "host": ["{{base_url}}"],
+              "path": ["user", "123e4567-e89b-12d3-a456-426614174000"]
+            },
+            "description": "Deleta um usuário"
+          },
+          "response": []
+        },
+        {
+          "name": "Testar Tenant",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/test-tenant",
+              "host": ["{{base_url}}"],
+              "path": ["user", "test-tenant"]
+            },
+            "description": "Testa se o middleware de tenant está funcionando"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Item",
+      "item": [
+        {
+          "name": "Criar Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"empresaId\": \"empresa-123\",\n  \"tipoId\": \"tipo-001\",\n  \"nome\": \"Pipoca Premium 500g\",\n  \"unidadeCompra\": \"pacote\",\n  \"unidadeConsumo\": \"grama\",\n  \"fatorConversao\": 500,\n  \"estoqueMinimo\": 10,\n  \"precoVenda\": 25.50,\n  \"custoMedioAtual\": 12.75\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/item/create",
+              "host": ["{{base_url}}"],
+              "path": ["item", "create"]
+            },
+            "description": "Cria um novo item/produto"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Itens",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/item?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["item"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Lista todos os itens com paginação"
+          },
+          "response": []
+        },
+        {
+          "name": "Obter Item por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/item/item-123",
+              "host": ["{{base_url}}"],
+              "path": ["item", "item-123"]
+            },
+            "description": "Obtém um item específico pelo ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar Item",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Pipoca Premium 600g\",\n  \"precoVenda\": 28.50,\n  \"custoMedioAtual\": 14.25\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/item/item-123",
+              "host": ["{{base_url}}"],
+              "path": ["item", "item-123"]
+            },
+            "description": "Atualiza os dados de um item existente"
+          },
+          "response": []
+        },
+        {
+          "name": "Deletar Item",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/item/item-123",
+              "host": ["{{base_url}}"],
+              "path": ["item", "item-123"]
+            },
+            "description": "Deleta um item"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Perfil",
+      "item": [
+        {
+          "name": "Criar Perfil",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"empresaId\": \"empresa-123\",\n  \"nome\": \"Gerente de Produção\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/perfil/create",
+              "host": ["{{base_url}}"],
+              "path": ["perfil", "create"]
+            },
+            "description": "Cria um novo perfil de usuário"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Perfis",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/perfil?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["perfil"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Lista todos os perfis com paginação"
+          },
+          "response": []
+        },
+        {
+          "name": "Obter Perfil por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/perfil/perfil-123",
+              "host": ["{{base_url}}"],
+              "path": ["perfil", "perfil-123"]
+            },
+            "description": "Obtém um perfil específico pelo ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar Perfil",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Gerente de Produção Updated\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/perfil/perfil-123",
+              "host": ["{{base_url}}"],
+              "path": ["perfil", "perfil-123"]
+            },
+            "description": "Atualiza os dados de um perfil existente"
+          },
+          "response": []
+        },
+        {
+          "name": "Deletar Perfil",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/perfil/perfil-123",
+              "host": ["{{base_url}}"],
+              "path": ["perfil", "perfil-123"]
+            },
+            "description": "Deleta um perfil"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Ficha Técnica",
+      "item": [
+        {
+          "name": "Criar Ficha Técnica",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"empresaId\": \"empresa-123\",\n  \"itemId\": \"item-123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/fichas-tecnicas/create",
+              "host": ["{{base_url}}"],
+              "path": ["fichas-tecnicas", "create"]
+            },
+            "description": "Cria uma nova ficha técnica para um item"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Fichas Técnicas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/fichas-tecnicas?empresaId=empresa-123&page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["fichas-tecnicas"],
+              "query": [
+                {
+                  "key": "empresaId",
+                  "value": "empresa-123"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Lista fichas técnicas por empresa com paginação"
+          },
+          "response": []
+        },
+        {
+          "name": "Obter Ficha Técnica por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/fichas-tecnicas/ficha-123",
+              "host": ["{{base_url}}"],
+              "path": ["fichas-tecnicas", "ficha-123"]
+            },
+            "description": "Obtém uma ficha técnica específica pelo ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar Ficha Técnica",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itemId\": \"item-456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/fichas-tecnicas/ficha-123",
+              "host": ["{{base_url}}"],
+              "path": ["fichas-tecnicas", "ficha-123"]
+            },
+            "description": "Atualiza os dados de uma ficha técnica"
+          },
+          "response": []
+        },
+        {
+          "name": "Deletar Ficha Técnica",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/fichas-tecnicas/ficha-123",
+              "host": ["{{base_url}}"],
+              "path": ["fichas-tecnicas", "ficha-123"]
+            },
+            "description": "Deleta uma ficha técnica"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Movimentação de Estoque",
+      "item": [
+        {
+          "name": "Criar Movimentação",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"empresaId\": \"empresa-123\",\n  \"itemId\": \"item-123\",\n  \"localId\": \"local-001\",\n  \"tipoId\": \"tipo-entrada\",\n  \"quantidade\": 100,\n  \"custoUnitario\": 12.50,\n  \"documentoTipo\": \"NF\",\n  \"documentoId\": \"NF-2024-001\",\n  \"observacao\": \"Compra de pipoca para produção\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/movimentacoes-estoque/create",
+              "host": ["{{base_url}}"],
+              "path": ["movimentacoes-estoque", "create"]
+            },
+            "description": "Cria uma nova movimentação de estoque (entrada ou saída)"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Movimentações",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/movimentacoes-estoque?empresaId=empresa-123&page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["movimentacoes-estoque"],
+              "query": [
+                {
+                  "key": "empresaId",
+                  "value": "empresa-123"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Lista movimentações de estoque por empresa com paginação"
+          },
+          "response": []
+        },
+        {
+          "name": "Obter Movimentação por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/movimentacoes-estoque/mov-123",
+              "host": ["{{base_url}}"],
+              "path": ["movimentacoes-estoque", "mov-123"]
+            },
+            "description": "Obtém uma movimentação específica pelo ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Obter Movimentações por Item",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/movimentacoes-estoque/item/item-123?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["movimentacoes-estoque", "item", "item-123"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Lista todas as movimentações de um item específico"
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar Movimentação",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantidade\": 120,\n  \"observacao\": \"Correção de quantidade - Compra de pipoca para produção\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/movimentacoes-estoque/mov-123",
+              "host": ["{{base_url}}"],
+              "path": ["movimentacoes-estoque", "mov-123"]
+            },
+            "description": "Atualiza os dados de uma movimentação de estoque"
+          },
+          "response": []
+        },
+        {
+          "name": "Deletar Movimentação",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/movimentacoes-estoque/mov-123",
+              "host": ["{{base_url}}"],
+              "path": ["movimentacoes-estoque", "mov-123"]
+            },
+            "description": "Deleta uma movimentação de estoque"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
