@@ -1,61 +1,290 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Estamarcado API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API REST desenvolvida com NestJS para o sistema Estamarcado, implementando arquitetura multi-tenant com autenticação JWT.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🚀 Tecnologias
 
-## Description
+- **Framework:** NestJS
+- **Linguagem:** TypeScript
+- **Banco de Dados:** PostgreSQL
+- **ORM:** Prisma
+- **Autenticação:** JWT + Passport
+- **Containerização:** Docker
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 📋 Pré-requisitos
 
-## Project setup
+- Node.js 18+
+- PostgreSQL 17+
+- Docker (opcional)
+
+## 🛠️ Instalação
 
 ```bash
-$ npm install
+# Instalar dependências
+npm install
+
+# Configurar variáveis de ambiente
+cp .env.example .env
+# Editar .env com suas configurações
 ```
 
-## Compile and run the project
+## 🗄️ Configuração do Banco de Dados
+
+### Opção 1: Docker (Recomendado)
 
 ```bash
-# development
-$ npm run start
+# Iniciar PostgreSQL via Docker
+docker-compose up -d
 
-# watch mode
-$ npm run start:dev
+# Executar migrações
+npx prisma migrate dev
 
-# production mode
-$ npm run start:prod
+# Popular banco com dados iniciais
+npm run seed
 ```
 
-## Run tests
+### Opção 2: PostgreSQL Local
+
+Certifique-se de que o PostgreSQL está rodando e configure a `DATABASE_URL` no arquivo `.env`.
+
+## 🚀 Executando a Aplicação
 
 ```bash
-# unit tests
+# Desenvolvimento (com hot-reload)
+npm run start:dev
+
+# Produção
+npm run build
+npm run start:prod
+
+# Debug
+npm run start:debug
+```
+
+## 🌱 Seed do Banco de Dados
+
+O seed cria dados iniciais necessários para o funcionamento do sistema:
+
+```bash
+# Executar seed
+npm run seed
+
+# Ou diretamente
+npx ts-node prisma/seed.ts
+```
+
+### Dados Criados pelo Seed
+
+- **Empresa:** Estamarcado Admin
+- **Usuário Admin:**
+  - Email: `admin@estamarcado.com`
+  - Senha: `admin123`
+  - Perfil: Administrador
+
+## 🔐 Autenticação
+
+### Login
+
+```bash
+POST /auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@estamarcado.com",
+  "password": "admin123"
+}
+```
+
+**Resposta:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "access_token": "eyJhbGciOiJIUzI1NiIs...",
+    "user": {
+      "id": "uuid",
+      "nome": "Administrador",
+      "email": "admin@estamarcado.com",
+      "empresaId": "empresa-admin"
+    }
+  }
+}
+```
+
+### Usando o Token
+
+Inclua o token JWT no header de Authorization:
+
+```
+Authorization: Bearer <access_token>
+```
+
+## 🏢 Multi-Tenant
+
+O sistema implementa isolamento automático por empresa através do `empresaId` presente no token JWT. Todas as consultas são automaticamente filtradas pela empresa do usuário logado.
+
+## 📊 Scripts Disponíveis
+
+```bash
+# Desenvolvimento
+npm run start:dev          # Servidor com hot-reload
+npm run start:debug        # Servidor em modo debug
+
+# Produção
+npm run build             # Compilar TypeScript
+npm run start:prod        # Executar build de produção
+
+# Banco de Dados
+npm run seed              # Executar seed do banco
+npx prisma migrate dev    # Executar migrações
+npx prisma studio         # Abrir Prisma Studio
+
+# Qualidade de Código
+npm run lint              # Executar ESLint
+npm run format            # Formatar código com Prettier
+
+# Testes
+npm run test              # Executar testes unitários
+npm run test:watch        # Testes em modo watch
+npm run test:cov          # Testes com cobertura
+npm run test:e2e          # Testes end-to-end
+```
+
+## 🧪 Testando a API
+
+### Exemplo: Teste de Autenticação
+
+```bash
+# 1. Login
+curl -X POST http://localhost:40404/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@estamarcado.com","password":"admin123"}'
+
+# 2. Usar token para acessar endpoint protegido
+curl -X GET http://localhost:40404/user/test-tenant \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+### Exemplo: Teste Multi-Tenant
+
+```bash
+# Endpoint que demonstra o isolamento por empresa
+GET /user/test-tenant
+Authorization: Bearer <token>
+
+# Resposta inclui empresaId do usuário logado
+{
+  "success": true,
+  "data": {
+    "empresaId": "empresa-admin",
+    "message": "Middleware de tenant funcionando!"
+  }
+}
+```
+
+## 🐳 Docker
+
+### Ambiente Completo
+
+```bash
+# Construir e executar tudo
+docker-compose up --build
+
+# Apenas banco de dados
+docker-compose up db
+
+# Apenas API
+docker-compose up api
+```
+
+### Variáveis de Ambiente Docker
+
+As seguintes variáveis são configuradas automaticamente:
+
+- `DB_USER=estamarcado_user`
+- `DB_PASSWORD=estamarcado_pass`
+- `DB_NAME=estamarcado_db`
+- `DB_PORT=5432`
+- `DATABASE_URL=postgresql://estamarcado_user:estamarcado_pass@localhost:5432/estamarcado_db`
+
+## 📁 Estrutura do Projeto
+
+```
+estamarcado-api/
+├── src/
+│   ├── app.module.ts           # Módulo principal
+│   ├── main.ts                 # Ponto de entrada
+│   ├── common/                 # Utilitários comuns
+│   │   ├── base-result.ts      # Respostas padronizadas
+│   │   ├── pagination.ts       # Paginação
+│   │   └── patinated-result.ts # Resultados paginados
+│   ├── core/                   # Funcionalidades core
+│   │   ├── auth/               # Autenticação JWT
+│   │   ├── database/           # Configuração do banco
+│   │   └── tenant/             # Middleware multi-tenant
+│   └── modules/                # Módulos de negócio
+│       └── user/               # Módulo de usuários
+├── prisma/
+│   ├── schema.prisma           # Schema do banco
+│   ├── seed.ts                 # Seed do banco
+│   └── migrations/             # Migrações
+├── docker-compose.yml          # Configuração Docker
+├── .env                        # Variáveis de ambiente
+└── package.json
+```
+
+## 🔧 Desenvolvimento
+
+### Adicionando Novos Módulos
+
+1. Criar módulo seguindo o padrão Orion
+2. Implementar DTOs, UseCases e Repository
+3. Registrar no `AppModule`
+4. Adicionar rotas e testes
+
+### Convenções de Código
+
+- **TypeScript:** Tipagem estrita
+- **ESLint:** Regras configuradas para qualidade
+- **Prettier:** Formatação automática
+- **Git:** Commits convencionais
+
+## 📈 Monitoramento
+
+A aplicação registra logs estruturados para facilitar o monitoramento:
+
+- Conexões ao banco de dados
+- Queries executadas
+- Erros e exceções
+- Autenticação e autorização
+
+## 🤝 Contribuição
+
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`)
+3. Commit suas mudanças (`git commit -m 'feat: adiciona nova feature'`)
+4. Push para a branch (`git push origin feature/nova-feature`)
+5. Abra um Pull Request
+
+## 📝 Licença
+
+Este projeto está sob a licença UNLICENSED.
+
+## 📞 Suporte
+
+Para dúvidas ou problemas, consulte a documentação ou abra uma issue no repositório.
 $ npm run test
 
 # e2e tests
+
 $ npm run test:e2e
 
 # test coverage
+
 $ npm run test:cov
-```
+
+````
 
 ## Deployment
 
@@ -66,7 +295,7 @@ If you are looking for a cloud-based platform to deploy your NestJS application,
 ```bash
 $ npm install -g @nestjs/mau
 $ mau deploy
-```
+````
 
 With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
 

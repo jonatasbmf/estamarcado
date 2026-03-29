@@ -1,4 +1,4 @@
 export class UserUpdateDto {
-  name?: string;
+  nome?: string;
   email?: string;
 }

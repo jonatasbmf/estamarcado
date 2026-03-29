@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  Request,
 } from '@nestjs/common';
 import { BaseResult } from 'src/common/base-result';
 import { PaginationDto } from 'src/common/pagination';
@@ -22,15 +23,25 @@ export class UserController {
   @Inject()
   private readonly userService: UserService;
 
+  @Get('test-tenant')
+  testTenant(@Request() req): BaseResult<any> {
+    return new BaseResult().ok({
+      empresaId: req.empresaId,
+      message: 'Middleware de tenant funcionando!',
+    });
+  }
+
   @Post('create')
-  async create(@Body() UserCreateDto: UserCreateDto) {
+  async create(
+    @Body() UserCreateDto: UserCreateDto,
+  ): Promise<BaseResult<UserResponseDto>> {
     const user = await this.userService.create(UserCreateDto);
     return user;
   }
 
   @Get(':id')
   async getById(@Param('id') id: string): Promise<BaseResult<UserResponseDto>> {
-    const user = await this.userService.getById(+id);
+    const user = await this.userService.getById(id);
     return user;
   }
 
@@ -39,13 +50,13 @@ export class UserController {
     @Param('id') id: string,
     @Body() updateDto: UserUpdateDto,
   ): Promise<BaseResult<UserResponseDto>> {
-    const result = await this.userService.update(+id, updateDto);
+    const result = await this.userService.update(id, updateDto);
     return result;
   }
 
   @Delete(':id')
   async delete(@Param('id') id: string): Promise<BaseResult<string>> {
-    return await this.userService.delete(+id);
+    return await this.userService.delete(id);
   }
 
   @Get()

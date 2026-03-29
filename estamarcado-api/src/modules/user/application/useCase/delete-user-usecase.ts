@@ -7,8 +7,8 @@ export class DeleteUserUseCase {
   @Inject()
   private readonly prismaService: PrismaService;
 
-  async execute(id: number): Promise<BaseResult<string>> {
-    var user = await this.prismaService.user.findUnique({
+  async execute(id: string): Promise<BaseResult<string>> {
+    const user = await this.prismaService.usuario.findUnique({
       where: {
         id,
       },
@@ -18,7 +18,7 @@ export class DeleteUserUseCase {
       return new BaseResult<string>().error('Usuário não encontrado.');
     }
 
-    await this.prismaService.user.delete({
+    await this.prismaService.usuario.delete({
       where: {
         id,
       },

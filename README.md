@@ -70,16 +70,24 @@ src/
    - Certifique-se de que o PostgreSQL está em execução.
    - Execute as migrations para criar as tabelas:
      ```bash
+     cd estamarcado-api
      npx prisma migrate dev
      ```
 
-5. **Inicie o servidor de desenvolvimento**:
+5. **Execute o seed inicial**:
+   - Para popular o banco de dados com dados iniciais (como usuário admin e empresa padrão):
+     ```bash
+     cd estamarcado-api
+     npm run seed
+     ```
+
+6. **Inicie o servidor de desenvolvimento**:
 
    ```bash
    npm run dev
    ```
 
-6. **Acesse o sistema**:
+7. **Acesse o sistema**:
    - O sistema estará disponível em `http://localhost:3000`.
 
 ## Uso Básico

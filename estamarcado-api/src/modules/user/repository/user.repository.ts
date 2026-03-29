@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Prisma, User } from 'src/core/database/prisma/generated/client';
+import { Prisma, Usuario } from 'src/core/database/prisma/generated/client';
 import { PrismaService } from 'src/core/database/prisma/prisma.service';
 
 @Injectable()
@@ -10,11 +10,11 @@ export class UserRepository {
   async findAll(params: {
     skip?: number;
     take?: number;
-    where?: Prisma.UserWhereInput;
-    orderBy?: Prisma.UserOrderByWithRelationInput;
-  }): Promise<User[]> {
+    where?: Prisma.UsuarioWhereInput;
+    orderBy?: Prisma.UsuarioOrderByWithRelationInput;
+  }): Promise<Usuario[]> {
     const { skip, take, where, orderBy } = params;
-    return this.primaService.user.findMany({
+    return this.primaService.usuario.findMany({
       skip,
       take,
       where,
@@ -22,7 +22,7 @@ export class UserRepository {
     });
   }
 
-  async count(where?: Prisma.UserWhereInput): Promise<number> {
-    return this.primaService.user.count({ where });
+  async count(where?: Prisma.UsuarioWhereInput): Promise<number> {
+    return this.primaService.usuario.count({ where });
   }
 }

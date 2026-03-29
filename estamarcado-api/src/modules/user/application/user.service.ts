@@ -22,8 +22,8 @@ export class UserService {
     private readonly creteUserUseCase: CreateUserUseCase,
   ) {}
 
-  async getById(id: number): Promise<BaseResult<UserResponseDto>> {
-    const user = await this.primaService.user.findUnique({
+  async getById(id: string): Promise<BaseResult<UserResponseDto>> {
+    const user = await this.primaService.usuario.findUnique({
       where: { id },
     });
 
@@ -33,16 +33,16 @@ export class UserService {
 
     return new BaseResult<UserResponseDto>().ok({
       id: user.id,
-      name: user.name ?? '',
+      nome: user.nome ?? '',
       email: user.email,
     });
   }
 
   async update(
-    id: number,
+    id: string,
     updateDto: UserUpdateDto,
   ): Promise<BaseResult<UserResponseDto>> {
-    const user = await this.primaService.user.update({
+    const user = await this.primaService.usuario.update({
       where: { id },
       data: updateDto,
     });
@@ -53,7 +53,7 @@ export class UserService {
 
     const updatedUser: UserResponseDto = {
       id: user.id,
-      name: user.name ?? '',
+      nome: user.nome ?? '',
       email: user.email,
     };
 
@@ -66,18 +66,18 @@ export class UserService {
     const { skip, take } = getPaginationParams(pagination);
     const search = pagination.search;
 
-    const where: Prisma.UserWhereInput = search
+    const where: Prisma.UsuarioWhereInput = search
       ? {
           OR: [
-            { name: { contains: search, mode: 'insensitive' } },
+            { nome: { contains: search, mode: 'insensitive' } },
             { email: { contains: search, mode: 'insensitive' } },
           ],
         }
       : {};
 
-    const orderBy: Prisma.UserOrderByWithRelationInput = pagination.sort
+    const orderBy: Prisma.UsuarioOrderByWithRelationInput = pagination.sort
       ? { [pagination.sort]: pagination.order || 'asc' }
-      : { name: 'asc' }; // Ordenação padrão caso nada seja enviado
+      : { nome: 'asc' }; // Ordenação padrão caso nada seja enviado
 
     const [data, total] = await Promise.all([
       this.userRepository.findAll({ skip, take, where, orderBy }),
@@ -92,7 +92,7 @@ export class UserService {
 
     const usuarios: UserResponseDto[] = data.map((element) => ({
       id: element.id,
-      name: element.name ?? '',
+      nome: element.nome ?? '',
       email: element.email,
     }));
 
@@ -107,7 +107,7 @@ export class UserService {
     });
   }
 
-  async delete(id: number): Promise<BaseResult<string>> {
+  async delete(id: string): Promise<BaseResult<string>> {
     const result = await this.deleteUserUseCase.execute(id);
 
     return result;
@@ -115,7 +115,7 @@ export class UserService {
 
   async create(
     UserCreateDto: UserCreateDto,
-  ): Promise<BaseResult<UserResponseDto> | BaseResult<string>> {
+  ): Promise<BaseResult<UserResponseDto>> {
     return this.creteUserUseCase.execute(UserCreateDto);
   }
 }
